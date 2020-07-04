@@ -75,33 +75,35 @@ def get_danmu(av_numbers, video=False, output_path=None, name_prefix='', p=1):
         base_path = output_path
         if not os.path.exists(base_path):
             os.makedirs(base_path)
-    do_danmu(av_numbers=av_numbers, video=video, output_path=base_path, name_prefix=name_prefix, p=p)
+    try:
+        do_danmu(av_numbers=av_numbers, video=video, output_path=base_path, name_prefix=name_prefix, p=p)
+    except Exception as e:
+        print(e)
 
 
 def do_danmu(av_numbers, video=False, output_path=None, name_prefix='', p=1):
-    api = 'https://www.biliplus.com/api/view?id=%s'
-
     for av_number in av_numbers:
         print("\n----------------\ndownloading xml av" + av_number)
-        req = requests.get(url=api % av_number)
-        json = req.json()
+        info = get_av_info(aid=av_number, update=0)
+        if info['pages'] is None:
+            info = get_av_info(aid=av_number, update=1)
 
-        title = validate_filename(json['title'])
+        title = validate_filename(info['title'])
+        pages = info['pages']
+
         dmlink = None
         part_name = None
 
-        pages = json['v2_app_api']['pages']
         for page in pages:
             if page['page'] == p:
                 dmlink = page['dmlink']
                 part_name = page['part']
                 break
 
+        if name_prefix and len(name_prefix):
+            title = name_prefix + ' ' + title
+
         if dmlink is not None:
-
-            if name_prefix and len(name_prefix):
-                title = name_prefix + ' ' + title
-
             if len(pages) > 1:
                 title = title + (' [P%s][%s]' % (p, part_name))
 
@@ -112,23 +114,38 @@ def do_danmu(av_numbers, video=False, output_path=None, name_prefix='', p=1):
                     f.write(req.content)
                 print("finished xml av" + av_number)
             except Exception as e:
-                print('creat error')
                 print(e)
-
-            if video:
-                video_url = video_base_url + av_number
-                video_name = title + '.flv'
-                get_video = GetVideo(video_name)
-                get_video.download(video_url)
-
-                new_file = os.path.join(output_path, video_name)
-                if output_path != os.getcwd():
-                    old_file = os.path.join(os.getcwd(), video_name)
-                    shutil.move(old_file, new_file)
-
-                print("finished at:\n{}\n----------------\n".format(new_file))
         else:
-            print("dmlink not find error av" + av_number)
+            print("error: dmlink not find for av" + av_number)
+
+        if video:
+            video_url = video_base_url + av_number
+            video_name = title + '.flv'
+            get_video = GetVideo(video_name)
+            get_video.download(video_url)
+
+            new_file = os.path.join(output_path, video_name)
+            if output_path != os.getcwd():
+                old_file = os.path.join(os.getcwd(), video_name)
+                shutil.move(old_file, new_file)
+
+            print("finished at:\n{}\n----------------\n".format(new_file))
+
+
+def get_av_info(aid, update=0):
+    api = 'https://www.biliplus.com/api/view?id={}&update={}'.format(aid, update)
+
+    req = requests.get(url=api)
+    json = req.json()
+
+    title = validate_filename(json['title'])
+    pages = None
+    if 'v2_app_api' in json:
+        pages = json['v2_app_api']
+        if 'pages' in pages:
+            pages = pages['pages']
+
+    return {'title': title, 'pages': pages}
 
 
 if __name__ == '__main__':
