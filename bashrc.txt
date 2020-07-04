@@ -1,0 +1,14 @@
+# ~/.bashrc: executed by bash(1) for non-login shells.
+# see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
+
+function download_video_danmu() {
+		sudo python3 ./bilidown.py $*
+	}
+
+function download_video_danmu_to_default() {
+		sudo python3 ./bilidown.py -o '~/bilidown' $*
+	}
+
+alias bilidown='download_video_danmu'
+
+alias  bilidown_default="download_video_danmu_to_default"
