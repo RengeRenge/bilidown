@@ -55,7 +55,7 @@ function download_video_danmu() {
 	}
 
 function download_video_danmu_to_default() {
-		sudo python3 ./bilidown.py -o '~/bilidown' $*
+		sudo python3 ./bilidown.py -o '/Users/renge/Desktop/bilidown/' $*
 	}
 
 alias bilidown='download_video_danmu'
