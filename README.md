@@ -1,18 +1,18 @@
 # bilidown
 批量下载哔哩哔哩视频和弹幕的工具
 
-### 安装
+## 安装
 
 - 需要有 python 环境
 - 如果没有安装 pip3，自行搜索各个平台的安装方法
 - ```pip3 install youtube_dl``` 本脚本依赖 youtube-dl 下载视频
 
-### 参数
+## 参数
 
 - -prefix (-p)下载的视频名字添加前缀
 - -output (-o)指定下载的路径，如果不指定，则下载到当前 cd 的目录
 
-### 用例
+## 用例
 
 #### 用例1
 
@@ -37,9 +37,9 @@ python3 bilidown.py av1830060 -p 20200704 -o ~/desktop/video
 python3 bilidown.py av170001 https://www.bilibili.com/video/BV1Es411j7AE BV15x411N7tu -p 20200704 -o ~/desktop/video
 ```
 
-### 更方便的用法
+## 更方便的用法
 
-##### 将 bilidown 定义为终端自定义命令
+#### 将 bilidown 定义为终端自定义命令
 
 mac 去修改 `~/.bash_profile`
 
@@ -79,7 +79,26 @@ bilidown av1830060 -p 安达可爱
 bilidown_default av1830060 -p 岛村可爱
 ```
 
-##### Windows 的一些建议
+#### 结果展示
+
+```bash
+Renge@RengedeMacBook-Pro ~ %  bilidown_default av1830060 -p 岛村可爱
+
+----------------
+downloading xml av1830060
+finished xml av1830060
+[BiliBili] 1830060: Downloading webpage
+[BiliBili] 1830060: Downloading video info page
+[download] Destination: 岛村可爱 【静止系MAD】Waiting for The Moon【安达与岛村】.flv
+[download] 100% of 21.59MiB in 00:46
+finished at:
+/Users/renge/Desktop/bilidown/岛村可爱 【静止系MAD】Waiting for The Moon【安达与岛村】.flv
+----------------
+
+Renge@RengedeMacBook-Pro ~ % 
+```
+
+#### Windows 的一些建议
 
 - Windows 需要编写 .bat 脚本，然后去 `我的电脑-右击-属性-高级系统设置-环境变量-系统变量-Path-编辑-新建-粘贴目录 `添加环境变量
 

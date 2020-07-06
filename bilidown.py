@@ -24,14 +24,14 @@ xor = 177451812
 add = 8728348608
 
 
-def dec(x):
+def av_dec(x):
     r = 0
     for idx in range(6):
         r += tr[x[s[idx]]] * 58 ** idx
     return (r - add) ^ xor
 
 
-def enc(x):
+def av_enc(x):
     x = (x ^ xor) + add
     r = list('BV1  4 1 7  ')
     for idx in range(6):
@@ -39,7 +39,7 @@ def enc(x):
     return ''.join(r)
 
 
-class GetVideo(object):
+class YoutubeDowner(object):
     def __init__(self, name):
         self.name = name
 
@@ -68,7 +68,7 @@ def validate_filename(name):
     return new_name
 
 
-def get_danmu(av_numbers, video=False, output_path=None, name_prefix='', p=1):
+def get_danmu_video(av_numbers, video=False, output_path=None, name_prefix='', p=1):
     if output_path is None:
         base_path = os.getcwd()
     else:
@@ -76,12 +76,12 @@ def get_danmu(av_numbers, video=False, output_path=None, name_prefix='', p=1):
         if not os.path.exists(base_path):
             os.makedirs(base_path)
     try:
-        do_danmu(av_numbers=av_numbers, video=video, output_path=base_path, name_prefix=name_prefix, p=p)
+        do_get_danmu_video(av_numbers=av_numbers, video=video, output_path=base_path, name_prefix=name_prefix, p=p)
     except Exception as e:
         print(e)
 
 
-def do_danmu(av_numbers, video=False, output_path=None, name_prefix='', p=1):
+def do_get_danmu_video(av_numbers, video=False, output_path=None, name_prefix='', p=1):
     for av_number in av_numbers:
         print("\n----------------\ndownloading xml av" + av_number)
         info = get_av_info(aid=av_number, update=0)
@@ -121,8 +121,8 @@ def do_danmu(av_numbers, video=False, output_path=None, name_prefix='', p=1):
         if video:
             video_url = video_base_url + av_number
             video_name = title + '.flv'
-            get_video = GetVideo(video_name)
-            get_video.download(video_url)
+            downer = YoutubeDowner(video_name)
+            downer.download(video_url)
 
             new_file = os.path.join(output_path, video_name)
             if output_path != os.getcwd():
@@ -185,9 +185,9 @@ if __name__ == '__main__':
                         break
 
             if param.startswith('BV') or param.startswith('bv'):
-                param = 'av{}'.format(dec(param))
+                param = 'av{}'.format(av_dec(param))
             if param.startswith('AV') or param.startswith('av'):
                 av_number = ''.join(filter(lambda x: x.isdigit(), param))
                 av.append(av_number)
 
-    get_danmu(av_numbers=av, video=True, output_path=output, name_prefix=prefix, p=p)
+    get_danmu_video(av_numbers=av, video=True, output_path=output, name_prefix=prefix, p=p)
