@@ -11,6 +11,7 @@
 
 - -prefix (-p)下载的视频名字添加前缀
 - -output (-o)指定下载的路径，如果不指定，则下载到当前 cd 的目录
+- -video  (-v)是否下载视频，传递参数1或者0。如果不指定，默认下载视频，否则只下载弹幕
 
 ## 用例
 
@@ -21,7 +22,7 @@
 - 保存到路径 ~/desktop/video
 
 ```bash
-python3 bilidown.py av1830060 -p 20200704 -o ~/desktop/video
+python3 bilidown.py av1830060 -p 20200704 -o ~/desktop/video -v 1
 ```
 
 #### 用例2

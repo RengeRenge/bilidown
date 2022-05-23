@@ -153,8 +153,13 @@ if __name__ == '__main__':
     output = None
     prefix = ''
     p = 1
+    video = True
+    prefix.isspace()
+
     read_path = False
     read_prefix = False
+    read_video = False
+
     for i in range(1, len(sys.argv)):
         param = sys.argv[i].strip()
         if read_path:
@@ -163,10 +168,15 @@ if __name__ == '__main__':
         elif read_prefix:
             prefix = param
             read_prefix = False
+        elif read_video:
+            video = (int(param) > 0) if param.isdigit() else False
+            read_video = False
         elif param == '-o' or param == '-output':
             read_path = True
         elif param == '-p' or param == '-prefix':
             read_prefix = True
+        elif param == '-v' or param == '-video':
+            read_video = True
         elif len(param) > 3:
             if param.startswith('https://www.bilibili.com/video'):
                 index = param.find('?')
@@ -189,5 +199,4 @@ if __name__ == '__main__':
             if param.startswith('AV') or param.startswith('av'):
                 av_number = ''.join(filter(lambda x: x.isdigit(), param))
                 av.append(av_number)
-
-    get_danmu_video(av_numbers=av, video=True, output_path=output, name_prefix=prefix, p=p)
+    get_danmu_video(av_numbers=av, video=video, output_path=output, name_prefix=prefix, p=p)
