@@ -83,11 +83,11 @@ Linux/Ubuntu 去修改 `~/.bashrc`
 
 ```bash
 function download_video_danmu() {
-		sudo python3 ./bilidown.py $*
+		sudo python3 ./bilidown.py -c ~/download/cookies.txt $*
 	}
 
 function download_video_danmu_to_default() {
-		sudo python3 ./bilidown.py -o '/Users/renge/Desktop/bilidown/' $*
+		sudo python3 ./bilidown.py -o '/Users/renge/Desktop/bilidown/' -c ~/download/cookies.txt $*
 	}
 
 alias bilidown='download_video_danmu'
