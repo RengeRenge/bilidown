@@ -10,33 +10,37 @@ import shutil
 video_base_url = 'https://www.bilibili.com/video/av'
 video_keys = ['av', 'AV', 'BV', 'bv']
 
-# 作者：mcfx
-# 链接：https://www.zhihu.com/question/381784377/answer/1099438784
-# 来源：知乎
-# 著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+# @refer https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/docs/misc/bvid_desc.md
 
-table = 'fZodR9XQDSUm21yCkr6zBqiveYah8bt4xsWpHnJE7jL5VG3guMTKNPAwcF'
-tr = {}
-for i in range(58):
-    tr[table[i]] = i
-s = [11, 10, 3, 8, 4, 6]
-xor = 177451812
-add = 8728348608
+XOR_CODE = 23442827791579
+MASK_CODE = 2251799813685247
+MAX_AID = 1 << 51
+ALPHABET = "FcwAPNKTMug3GV5Lj7EJnHpWsx4tb8haYeviqBz6rkCy12mUSDQX9RdoZf"
+ENCODE_MAP = 8, 7, 0, 5, 1, 3, 2, 4, 6
+DECODE_MAP = tuple(reversed(ENCODE_MAP))
 
+BASE = len(ALPHABET)
+PREFIX = "BV1"
+PREFIX_LEN = len(PREFIX)
+CODE_LEN = len(ENCODE_MAP)
 
-def av_dec(x):
-    r = 0
-    for idx in range(6):
-        r += tr[x[s[idx]]] * 58 ** idx
-    return (r - add) ^ xor
+def av2bv(aid: int) -> str:
+    bvid = [""] * 9
+    tmp = (MAX_AID | aid) ^ XOR_CODE
+    for i in range(CODE_LEN):
+        bvid[ENCODE_MAP[i]] = ALPHABET[tmp % BASE]
+        tmp //= BASE
+    return PREFIX + "".join(bvid)
 
+def bv2av(bvid: str) -> int:
+    assert bvid[:3] == PREFIX
 
-def av_enc(x):
-    x = (x ^ xor) + add
-    r = list('BV1  4 1 7  ')
-    for idx in range(6):
-        r[s[idx]] = table[x // 58 ** idx % 58]
-    return ''.join(r)
+    bvid = bvid[3:]
+    tmp = 0
+    for i in range(CODE_LEN):
+        idx = ALPHABET.index(bvid[DECODE_MAP[i]])
+        tmp = tmp * BASE + idx
+    return (tmp & MASK_CODE) ^ XOR_CODE
 
 
 class YoutubeDowner(object):
@@ -195,7 +199,7 @@ if __name__ == '__main__':
                         break
 
             if param.startswith('BV') or param.startswith('bv'):
-                param = 'av{}'.format(av_dec(param))
+                param = 'av{}'.format(bv2av(param))
             if param.startswith('AV') or param.startswith('av'):
                 av_number = ''.join(filter(lambda x: x.isdigit(), param))
                 av.append(av_number)
