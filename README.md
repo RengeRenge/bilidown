@@ -1,17 +1,47 @@
 # bilidown
 批量下载哔哩哔哩视频和弹幕的工具
 
-## 安装
+## 安装依赖
 
 - 需要有 python 环境
-- 如果没有安装 pip3，自行搜索各个平台的安装方法
-- ```pip3 install youtube_dl``` 本脚本依赖 youtube-dl 下载视频
+- 如果没有安装 pip，自行搜索各个平台的安装方法
+
+### 安装 yt-dlp
+
+脚本依赖 yt-dlp 下载视频
+
+```bash
+pip install yt-dlp
+```
+
+### 安装 ffmpeg
+
+yt-dlp 依赖 ffmpeg 将下载的视频和音频合并在一起
+
+#### Linux/Ubuntu
+```bash
+sudo apt install ffmpeg
+``` 
+#### Windows
+
+[ffmpeg.exe 可执行文件下载地址](https://ffmpeg.org/download.html#build-windows)
+
+将 ffmpeg.exe 添加进系统的环境变量 path 里
 
 ## 参数
 
-- -prefix (-p)下载的视频名字添加前缀
-- -output (-o)指定下载的路径，如果不指定，则下载到当前 cd 的目录
-- -video  (-v)是否下载视频，传递参数1或者0。如果不指定，默认下载视频，否则只下载弹幕
+- -prefix (-p) 下载的视频名字添加前缀
+- -output (-o) 指定下载的路径，如果不指定，则下载到当前 cd 的目录
+- -video (-v) 是否下载视频，传递参数1或者0，默认是1。
+- -danmuku (-d) 是否下载弹幕，传递参数1或者0，默认是1。
+- -cookie (-c) 指定浏览器 cookie 的路径，有 cookie 能下载当前登录账号可观看的最高质量的视频
+
+### cookie 获取
+
+- 浏览器添加扩展插件 [Get cookies.txt LOCALLY](https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc)
+- 打开 [bilibili](https://www.bilibili.com/) 确保已登录账号
+- 点击扩展-插件-Export，下载当前的 cookie
+
 
 ## 用例
 
@@ -20,9 +50,10 @@
 - 单个视频下载
 - 下载完成后添加前缀 20200704
 - 保存到路径 ~/desktop/video
+- 指定 cookie 的路径 ~/download/cookies.txt
 
 ```bash
-python3 bilidown.py av1830060 -p 20200704 -o ~/desktop/video -v 1
+python3 bilidown.py av1830060 -p 20200704 -o ~/desktop/video -c ~/download/cookies.txt
 ```
 
 #### 用例2
@@ -84,18 +115,29 @@ bilidown_default av1830060 -p 岛村可爱
 
 ```bash
 Renge@RengedeMacBook-Pro ~ %  bilidown_default av1830060 -p 岛村可爱
-
-----------------
-downloading xml av1830060
+--------------------------------
+downloading danmuku xml av1830060
 finished xml av1830060
+[BiliBili] Extracting URL: https://www.bilibili.com/video/av1830060
 [BiliBili] 1830060: Downloading webpage
-[BiliBili] 1830060: Downloading video info page
-[download] Destination: 岛村可爱 【静止系MAD】Waiting for The Moon【安达与岛村】.flv
-[download] 100% of 21.59MiB in 00:46
-finished at:
-/Users/renge/Desktop/bilidown/岛村可爱 【静止系MAD】Waiting for The Moon【安达与岛村】.flv
-----------------
-
+[BiliBili] BV15x411N7tu: Extracting videos in anthology
+[BiliBili] BV15x411N7tu: Downloading wbi sign
+[BiliBili] BV15x411N7tu: Downloading video formats for cid 2814198
+[BiliBili] 1830060: Extracting chapters
+[info] BV15x411N7tu: Downloading 1 format(s): 100111+30280
+[info] Downloading video thumbnail 0 ...
+[info] Writing video thumbnail 0 to: /Users/renge/Desktop/bilidown/岛村可爱 【静止系MAD】Waiting for The Moon.jpg
+[download] Destination: /Users/renge/Desktop/bilidown/岛村可爱 【静止系MAD】Waiting for The Moon.f100111.mp4
+[download] 100% of    3.85MiB in 00:00:00 at 8.97MiB/s
+[download] Destination: /Users/renge/Desktop/bilidown/岛村可爱 【静止系MAD】Waiting for The Moon.f30280.m4a
+[download] 100% of    1.44MiB in 00:00:00 at 3.34MiB/s
+[Merger] Merging formats into "/Users/renge/Desktop/bilidown/岛村可爱 【静止系MAD】Waiting for The Moon.mp4"
+Deleting original file /Users/renge/Desktop/bilidown/岛村可爱 【静止系MAD】Waiting for The Moon.f100111.mp4 (pass -k to keep)
+Deleting original file /Users/renge/Desktop/bilidown/岛村可爱 【静止系MAD】Waiting for The Moon.f30280.m4a (pass -k to keep)
+[EmbedThumbnail] Neither mutagen nor AtomicParsley was found. Falling back to ffmpeg
+[EmbedThumbnail] ffmpeg: Adding thumbnail to "/Users/renge/Desktop/bilidown/岛村可爱 【静止系MAD】Waiting for The Moon.mp4"
+[Metadata] Adding metadata to "/Users/renge/Desktop/bilidown/岛村可爱 【静止系MAD】Waiting for The Moon.mp4"
+--------------------------------
 Renge@RengedeMacBook-Pro ~ % 
 ```
 
