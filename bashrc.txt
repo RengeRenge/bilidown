@@ -2,11 +2,11 @@
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 
 function download_video_danmu() {
-		sudo python3 ./bilidown.py -c ~/download/cookies.txt $*
+		sudo python3 ./bilidown.py -c '~/download/cookies.txt' $*
 	}
 
 function download_video_danmu_to_default() {
-		sudo python3 ./bilidown.py -o '~/bilidown' -c ~/download/cookies.txt $*
+		sudo python3 ./bilidown.py -o '~/bilidown' -c '~/download/cookies.txt' $*
 	}
 
 alias bilidown='download_video_danmu'
