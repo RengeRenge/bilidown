@@ -180,61 +180,46 @@ if __name__ == '__main__':
     video = True
     damu = True
     cookie_path = None
-    prefix.isspace()
+    
+    length = len(sys.argv)
+    
+    for i in range(1, length):
+        key = sys.argv[i].strip()
+        value = None
 
-    read_path = False
-    read_prefix = False
-    read_video = False
-    read_damu = False
-    read_cookie = False
-
-    for i in range(1, len(sys.argv)):
-        param = sys.argv[i].strip()
-        if read_path:
-            output = param
-            read_path = False
-        elif read_prefix:
-            prefix = param
-            read_prefix = False
-        elif read_video:
-            video = (int(param) > 0) if param.isdigit() else False
-            read_video = False
-        elif read_damu:
-            damu = (int(param) > 0) if param.isdigit() else False
-            read_damu = False
-        elif read_cookie:
-            cookie_path = param
-            read_cookie = False
-        elif param == '-o' or param == '-output':
-            read_path = True
-        elif param == '-p' or param == '-prefix':
-            read_prefix = True
-        elif param == '-v' or param == '-video':
-            read_video = True
-        elif param == '-d' or param == '-danmaku':
-            read_damu = True
-        elif param == '-c' or param == '-cookie':
-            read_cookie = True
-        elif len(param) > 3:
-            if param.startswith('https://www.bilibili.com/video'):
-                index = param.find('?')
+        if i+1 < length:
+            value = sys.argv[i+1].strip()
+        
+        if key == '-o' or key == '-output':
+            output = value
+        elif key == '-p' or key == '-prefix':
+            prefix = value
+        elif key == '-v' or key == '-video':
+            video = (int(value) > 0) if value.isdigit() else False
+        elif key == '-d' or key == '-danmaku':
+            damu = (int(value) > 0) if value.isdigit() else False
+        elif key == '-c' or key == '-cookie':
+            cookie_path = value
+        elif len(key) > 3:
+            if key.startswith('https://www.bilibili.com/video'):
+                index = key.find('?')
                 if index != -1:
-                    for find_p in param[index + 1:].split('&'):
+                    for find_p in key[index + 1:].split('&'):
                         if find_p.startswith('p='):
                             p = int(find_p[2:])
-                for item in param.split('/'):
+                for item in key.split('/'):
                     flag = False
                     for key in video_keys:
                         if item.startswith(key):
-                            param = item
+                            key = item
                             flag = True
                             break
                     if flag:
                         break
 
-            if param.startswith('BV') or param.startswith('bv'):
-                param = 'av{}'.format(BilibiliCodec.bv2av(param))
-            if param.startswith('AV') or param.startswith('av'):
-                av_number = ''.join(filter(lambda x: x.isdigit(), param))
+            if key.startswith('BV') or key.startswith('bv'):
+                key = 'av{}'.format(BilibiliCodec.bv2av(key))
+            if key.startswith('AV') or key.startswith('av'):
+                av_number = ''.join(filter(lambda x: x.isdigit(), key))
                 av.append(av_number)
     get_danmu_video(av_numbers=av, cookie_path=cookie_path, damu=damu, video=video, output_path=output, name_prefix=prefix, p=p)

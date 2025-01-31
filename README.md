@@ -21,7 +21,23 @@ yt-dlp 依赖 ffmpeg 将下载的视频和音频合并在一起
 #### Linux/Ubuntu
 ```bash
 sudo apt install ffmpeg
-``` 
+```
+注意系统自带的 apt 源安装的 ffmpeg 版本可能过旧，对于某些视频可能没法处理。比如音频流是 FLAC 编码的视频。所以需要自己安装最新版本。
+
+```bash
+# 下载最新静态构建版本（访问 https://johnvansickle.com/ffmpeg/ 确认最新版本）
+wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
+
+# 解压并进入目录
+tar xvf ffmpeg-release-amd64-static.tar.xz
+cd ffmpeg-*-static
+
+# 将二进制文件复制到系统路径（覆盖旧版前建议备份）
+sudo cp ffmpeg ffprobe /usr/local/bin/
+
+# 验证版本
+ffmpeg -version
+```
 #### Windows
 
 [ffmpeg.exe 可执行文件下载地址](https://ffmpeg.org/download.html#build-windows)
@@ -51,9 +67,10 @@ sudo apt install ffmpeg
 - 下载完成后添加前缀 20200704
 - 保存到路径 ~/desktop/video
 - 指定 cookie 的路径 ~/download/cookies.txt
+- -d 设置为 0 不下载弹幕
 
 ```bash
-python3 bilidown.py av1830060 -p 20200704 -o ~/desktop/video -c ~/download/cookies.txt
+python3 bilidown.py av1830060 -p 20200704 -o ~/desktop/video -c ~/download/cookies.txt -d 0
 ```
 
 #### 用例2
@@ -83,23 +100,23 @@ Linux/Ubuntu 去修改 `~/.bashrc`
 
 ```bash
 function download_video_danmu() {
-		sudo python3 ./bilidown.py -c '~/download/cookies.txt' $*
-	}
+	sudo python3 ./bilidown.py -c '~/download/cookies.txt' $*
+}
 
 function download_video_danmu_to_default() {
-		sudo python3 ./bilidown.py -o '/Users/renge/Desktop/bilidown/' -c '~/download/cookies.txt' $*
-	}
+	sudo python3 ./bilidown.py -o '/Users/renge/Desktop/bilidown/' -c '~/download/cookies.txt' $*
+}
 
 alias bilidown='download_video_danmu'
 
 alias bilidown_default="download_video_danmu_to_default"
-
 ```
 
 修改完成后执行 ```source .bashxxx``` 使其立刻生效 .bashxxx 为刚刚修改的文件
 
 现在我们可以使用自定义的命令 bilidown 下载视频了
 
+省去了每次手动输入 cookie 地址
 ```bash
 cd ~/bilidown
 bilidown av1830060 -p 安达可爱
