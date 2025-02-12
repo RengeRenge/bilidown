@@ -78,13 +78,15 @@ class ytdlp:
             print(f"yt-dlp download error: {e}")
 
 
-class pageInfo:
-    def __init__(self, title: str, dmlink: str):
+class PageInfo:
+    def __init__(self, aid, p: int, title: str, dmlink: str):
         self.title = title
         self.dmlink = dmlink
-        
+        self.aid = aid
+        self.videoUrl = f"{video_base_url}{aid}?p={p}"
 
-def getPageInfo(aid, name_prefix='', page=1, update=0) -> pageInfo:
+
+def getPageInfo(aid, name_prefix='', p=1, update=0) -> PageInfo:
     info = get_av_info(aid=aid, update=update)
     if info['pages'] is None:
         info = get_av_info(aid=aid, update=1)
@@ -102,12 +104,12 @@ def getPageInfo(aid, name_prefix='', page=1, update=0) -> pageInfo:
             break
 
     if dmlink is None and update == 0:
-        return getPageInfo(aid=aid, name_prefix=name_prefix, page=page, update=1)
+        return getPageInfo(aid=aid, name_prefix=name_prefix, p=p, update=1)
     if name_prefix and len(name_prefix):
         title = name_prefix + ' ' + title
     if len(pages) > 1:
         title = f"{title} [P{p}][{part_name}]"
-    return pageInfo(title, dmlink)
+    return PageInfo(aid, p, title, dmlink)
     
         
 def validate_filename(name):
@@ -132,7 +134,7 @@ def get_danmu_video(av_numbers, cookie_path, damu=False, video=False, output_pat
 def do_get_danmu_video(av_numbers, cookie_path, damu=False, video=False, output_path=None, name_prefix='', p=1):
     for av_number in av_numbers:
         print(f"--------------------------------")
-        info = getPageInfo(aid=av_number, name_prefix=name_prefix, page=p, update=1)
+        info = getPageInfo(aid=av_number, name_prefix=name_prefix, p=p, update=1)
         if damu: 
             if info.dmlink is not None:
                 print(f"downloading danmuku xml av{av_number}")
@@ -148,10 +150,8 @@ def do_get_danmu_video(av_numbers, cookie_path, damu=False, video=False, output_
                 print(f"error: dmlink not find for av{av_number}")
 
         if video:
-            video_url = video_base_url + av_number
             video_path = os.path.join(output_path, info.title)
-            
-            downer = ytdlp(video_url, video_path, cookie_path)
+            downer = ytdlp(info.videoUrl, video_path, cookie_path)
             downer.download()
         print(f"--------------------------------")
 
