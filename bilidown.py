@@ -245,11 +245,6 @@ if __name__ == '__main__':
             cookie_path = value
         elif len(key) > 3:
             if key.startswith('https://www.bilibili.com/video'):
-                index = key.find('?')
-                if index != -1:
-                    for find_p in key[index + 1:].split('&'):
-                        if find_p.startswith('p='):
-                            p = int(find_p[2:])
                 for item in key.split('/'):
                     flag = False
                     for key in video_keys:
@@ -259,6 +254,13 @@ if __name__ == '__main__':
                             break
                     if flag:
                         break
+
+            index = key.find('?')
+            if index != -1:
+                for find_p in key[index + 1:].split('&'):
+                    if find_p.startswith('p='):
+                        p = int(find_p[2:])
+                key = key[:index]
 
             if key.startswith('BV') or key.startswith('bv'):
                 key = 'av{}'.format(BilibiliCodec.bv2av(key))
