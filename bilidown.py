@@ -1,11 +1,14 @@
 # coding:utf-8
 import os
 import sys
+import time
+from datetime import timedelta
 
 import yt_dlp
 import requests
 import re
 from json import JSONDecodeError
+from tqdm import tqdm
 
 api_biliplus_view = 'https://www.biliplus.com/api/view'
 api_bilibili_view = 'https://api.bilibili.com/x/web-interface/view'
@@ -64,22 +67,79 @@ class ytdlp:
             'outtmpl': f'{path}.%(ext)s',
             "merge_output_format": "mp4",  # 合并格式（需ffmpeg）
             'keepvideo': False,  # 合并后保留原始文件
-            # "progress_hooks": [self.my_hook],  # 进度回调（需自定义函数）
             "noplaylist": True,  # 启用播放列表下载
             "writethumbnail": True,
             'postprocessors': [
                 {'key': 'EmbedThumbnail'},  # 嵌入封面到视频文件
                 {'key': 'FFmpegMetadata'},  # 添加元数据
             ],
+            "progress_hooks": [self._progress_hook],  # 添加进度回调
         }
         if cookiePath is not None:
             self.ydl_opts['cookiefile'] = cookiePath
+        
+        # 初始化进度条相关变量
+        self.pbar = None
+        self.start_time = None
+        self.last_downloaded = 0
+        self.last_time = None
 
+    def _format_size(self, size_bytes):
+        """格式化文件大小显示"""
+        if size_bytes == 0:
+            return "0B"
+        size_names = ("B", "KB", "MB", "GB", "TB")
+        i = 0
+        while size_bytes >= 1024 and i < len(size_names) - 1:
+            size_bytes /= 1024
+            i += 1
+        return f"{size_bytes:.2f}{size_names[i]}"
 
-    # def my_hook(self, d):
-    #     if d['status'] == 'downloading':
-    #         print(f"downloading: {d['_percent_str']}\n")
+    def _format_speed(self, speed_bytes):
+        """格式化速度显示"""
+        return f"{self._format_size(speed_bytes)}/s"
 
+    def _progress_hook(self, d):
+        """下载进度回调函数"""
+        if d['status'] == 'downloading':
+            # 初始化进度条
+            if self.pbar is None:
+                total = d.get('total_bytes', 0) or d.get('total_bytes_estimate', 0)
+                if total:
+                    self.pbar = tqdm(
+                        total=total,
+                        unit='B',
+                        unit_scale=True,
+                        desc="Downloading",
+                        bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}] {rate_fmt}'
+                    )
+                    self.start_time = time.time()
+                    self.last_time = self.start_time
+                    self.last_downloaded = 0
+
+            # 更新进度条
+            if self.pbar is not None:
+                downloaded = d.get('downloaded_bytes', 0)
+                if downloaded > 0:
+                    # 计算下载速度
+                    current_time = time.time()
+                    time_diff = current_time - self.last_time
+                    if time_diff >= 1.0:  # 每秒更新一次速度
+                        speed = (downloaded - self.last_downloaded) / time_diff
+                        self.pbar.set_postfix({
+                            'Speed': self._format_speed(speed),
+                            'Downloaded': self._format_size(downloaded)
+                        })
+                        self.last_downloaded = downloaded
+                        self.last_time = current_time
+                    
+                    self.pbar.update(downloaded - self.pbar.n)
+
+        elif d['status'] == 'finished':
+            if self.pbar is not None:
+                self.pbar.close()
+                self.pbar = None
+            print("\nDownload completed!")
 
     def download(self):
         try:
@@ -87,6 +147,9 @@ class ytdlp:
                 ydl.download(self.urls)
         except yt_dlp.utils.DownloadError as e:
             print(f"yt-dlp download error: {e}")
+            if self.pbar is not None:
+                self.pbar.close()
+                self.pbar = None
 
 
 class PageInfo:
@@ -136,9 +199,13 @@ def get_av_info(aid, update=0, biliplus=True):
         if 'v2_app_api' in json:
             json = json['v2_app_api']
     else:
-        json = json['data']
+        if 'data' in json:
+            json = json['data']
+        else:
+            print(f"Error: Invalid response format for av{aid}")
+            return {'title': f'av{aid}', 'pages': [{'page': 1, 'part': '1'}], 'videos': 1}
 
-    title = validate_filename(json['title'])
+    title = validate_filename(json.get('title', f'av{aid}'))
     pages = None
     videos = 1
 
@@ -164,7 +231,7 @@ def getPageInfo(aid, name_prefix='', p=1, update=0, damu=False) -> PageInfo:
         if page['page'] == p:
             if 'dmlink' in page:
                 dmlink = page['dmlink']
-            part_name = page['part']
+            part_name = page.get('part', f'Part {p}')
             break
 
     if damu == True and dmlink is None and update == 0:
@@ -189,11 +256,11 @@ def do_get_danmu_video(av_numbers, cookie_path, damu=False, video=False, output_
                     file_path = os.path.join(output_path, info.title + '.xml')
                     with open(file_path, "wb") as f:
                         f.write(req.content)
-                    print(f"finished xml av{aid}")
+                    print(f"Finished xml av{aid}")
                 except Exception as e:
                     print(f"{e}\n")
             else:
-                print(f"Error: dmlink not find for av{aid}")
+                print(f"Error: dmlink not found for av{aid}")
 
         if video:
             video_path = os.path.join(output_path, info.title)
@@ -210,7 +277,8 @@ def get_danmu_video(av_numbers, cookie_path, damu=False, video=False, output_pat
         if not os.path.exists(base_path):
             os.makedirs(base_path)
     try:
-        do_get_danmu_video(av_numbers=av_numbers, cookie_path=cookie_path, damu=damu, video=video, output_path=base_path, name_prefix=name_prefix, p=p)
+        do_get_danmu_video(av_numbers=av_numbers, cookie_path=cookie_path, damu=damu, video=video, 
+                          output_path=base_path, name_prefix=name_prefix, p=p)
     except Exception as e:
         print(f"Download error: {e}\n")
 
@@ -247,24 +315,21 @@ if __name__ == '__main__':
             if key.startswith('https://www.bilibili.com/video'):
                 for item in key.split('/'):
                     flag = False
-                    for key in video_keys:
-                        if item.startswith(key):
-                            key = item
+                    for k in video_keys:
+                        if item.startswith(k):
+                            av_number = ''.join(filter(lambda x: x.isdigit(), item))
+                            if av_number:
+                                av.append(av_number)
                             flag = True
                             break
                     if flag:
                         break
+            else:
+                for k in video_keys:
+                    if k in key:
+                        av_number = ''.join(filter(lambda x: x.isdigit(), key))
+                        if av_number:
+                            av.append(av_number)
+                        break
 
-            index = key.find('?')
-            if index != -1:
-                for find_p in key[index + 1:].split('&'):
-                    if find_p.startswith('p='):
-                        p = int(find_p[2:])
-                key = key[:index]
-
-            if key.startswith('BV') or key.startswith('bv'):
-                key = 'av{}'.format(BilibiliCodec.bv2av(key))
-            if key.startswith('AV') or key.startswith('av'):
-                av_number = ''.join(filter(lambda x: x.isdigit(), key))
-                av.append(av_number)
     get_danmu_video(av_numbers=av, cookie_path=cookie_path, damu=damu, video=video, output_path=output, name_prefix=prefix, p=p)
